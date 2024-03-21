@@ -1,0 +1,268 @@
+﻿// See https://aka.ms/new-console-template for more information
+
+//over server over to unity
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Text;
+
+//2, "tets1":1, "test2":2
+//first: packet type
+//rest: data
+
+//packets--
+//move packet
+//  packet Type = 1
+//  player ID
+//  player pos:
+//      posx
+//      posy
+//      posz
+//  player animtion states:
+//      runningBool    
+//      moveingBool
+//      reverseBool
+//
+//connect packet (just sets the id to a number and send back to the player)
+//  packet Type = 2
+//  player ID   <-- changed by server sent back to client
+//
+
+
+namespace Prog
+{
+    class basePacket {
+        public enum _packetType {
+            unknown = 0,
+            movePacket = 1, //implimented
+            connectPacket = 2
+        }
+
+        public uint id = 0; //given by the sending client
+        public _packetType packetType = 0; //given by the packet
+
+        //convert packet data to meaningful class
+        public static basePacket? parseData(string data) {
+            string[] typeData = data.Split(",", 2); //split into packet type and data
+            if (typeData.Length < 2 || data == "") { return null; }
+            Dictionary<string, string> allData = stringArrToDic(typeData[1].Split(",")); //split up data
+
+            //parse packet type and set in class
+            int packetType = 0;
+            if (!int.TryParse(typeData[0], out packetType)) { //if failed to parse
+                return null;
+            }
+
+            //populate data in packet type
+            switch ((_packetType)packetType) {
+
+                case _packetType.movePacket:
+                    {
+                        Console.WriteLine("proccessing movePacket");
+                        movePacket packet = new movePacket();
+                        packet.packetType = (_packetType)packetType;
+                        //assign all values
+                        if (!uint.TryParse(allData["id"], out packet.id)) { return null; }
+
+                        if (!float.TryParse(allData["posx"], out packet.posx)) { return null; }
+                        if (!float.TryParse(allData["posy"], out packet.posy)) { return null; }
+                        if (!float.TryParse(allData["posz"], out packet.posz)) { return null; }
+
+                        if (!bool.TryParse(allData["runningBool"], out packet.runningBool)) { return null; }
+                        if (!bool.TryParse(allData["moveingBool"], out packet.moveingBool)) { return null; }
+                        if (!bool.TryParse(allData["reverseBool"], out packet.reverseBool)) { return null; }
+
+                        return packet;
+                    }
+                case _packetType.connectPacket:
+                    {
+                        Console.WriteLine("proccessing movePacket");
+                        //update id outside and send back
+                        connectPacket packet = new connectPacket();
+                        packet.packetType = (_packetType)packetType;
+                        return packet;
+                    }
+                case _packetType.unknown:
+                default:
+                    return null;
+                
+            }
+        }
+        static Dictionary<string, string> stringArrToDic(string[] data) {
+            Dictionary<string, string> newDataDic = new Dictionary<string, string>();
+            foreach (string s in data) {
+                string[] keyVal = s.Split(":");
+                if (keyVal.Length < 2) { continue; }
+                keyVal[0] = keyVal[0].Trim().Trim('\"');
+                keyVal[1] = keyVal[1].Trim().Trim('\"');
+                newDataDic.Add(keyVal[0], keyVal[1]);
+            }
+            return newDataDic;
+        }
+
+        //convert class to packet data
+        public string packetToString() {
+            string dataString = "";
+            switch (this.packetType)
+            {
+
+                case _packetType.movePacket:
+                {
+                        int temp = (int)this.packetType;
+                        dataString += temp.ToString()+",";//add packet type
+                        dataString += "\"id\":" + ((movePacket)this).id.ToString() + ",";//add packet type
+
+                        dataString += "\"posx\":"+((movePacket)this).posx.ToString() + ",";//add packet type
+                        dataString += "\"posy\":" + ((movePacket)this).posx.ToString() + ",";//add packet type
+                        dataString += "\"posz\":" + ((movePacket)this).posy.ToString() + ",";//add packet type
+
+                        dataString += "\"runningBool\":" + ((movePacket)this).runningBool.ToString() + ",";//add packet type
+                        dataString += "\"moveingBool\":" + ((movePacket)this).moveingBool.ToString() + ",";//add packet type
+                        dataString += "\"reverseBool\":" + ((movePacket)this).reverseBool.ToString() + ",";//add packet type
+
+
+                        break;
+                }
+                case _packetType.connectPacket:
+                    {
+                        int temp = (int)this.packetType;
+                        dataString += temp.ToString() + ",";//add packet type
+                        dataString += "\"id\":" + ((connectPacket)this).id.ToString() + ",";//add packet type
+
+                        break;
+                    }
+                   
+                case _packetType.unknown: 
+                default:
+                    return "";
+
+            }
+
+            return dataString;
+        }
+    }
+
+    class movePacket : basePacket {
+
+        public float posx = 0;
+        public float posy = 0;
+        public float posz = 0;
+
+        public bool runningBool = false;
+        public bool moveingBool = false;
+        public bool reverseBool = false;
+    }
+    class connectPacket : basePacket { }
+
+
+    class server {
+        class clientClass{
+            public Socket connection;
+            public uint id;
+
+            public clientClass(Socket con, uint id) {
+                this.connection = con;
+                this.id = id;
+            }
+        }
+
+        static uint players = 1;
+
+        static Queue<basePacket> packetQueue = new Queue<basePacket>();
+        static List<clientClass> clients = new List<clientClass>();
+
+        //user per connection used to recive packets
+        static void handlerThread(clientClass clientSoc) {
+            Console.WriteLine("clinet connected, ID: " + clientSoc.id.ToString());
+            while (true)
+            {
+                string data = "";
+                byte[] bytes = new byte[1024];
+                int bytesRec = clientSoc.connection.Receive(bytes);
+                data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
+
+                basePacket? parsedPacket = basePacket.parseData(data);
+                Console.WriteLine("got packet: " + data);
+                if (parsedPacket != null)
+                {
+                    //if its a connection packet, let the clients msg listener handle it
+                    if (parsedPacket.packetType == basePacket._packetType.connectPacket)
+                    {
+                        parsedPacket.id = clientSoc.id;
+
+                        byte[] msg = Encoding.ASCII.GetBytes(parsedPacket.packetToString());
+                        Console.WriteLine("sent the packet: ", parsedPacket.packetToString());
+                        clientSoc.connection.Send(msg);
+                    }
+                    else
+                    {
+                        packetQueue.Enqueue(parsedPacket);
+                    }
+                }
+            }
+        }
+
+        //broad cast packets to all player except the one who sent it.
+        static void SendHandler() {
+            while (true) {
+                if (packetQueue.Count > 0)
+                {
+                    basePacket packet = packetQueue.Dequeue();
+                    byte[] msg = Encoding.ASCII.GetBytes(packet.packetToString());
+
+                    foreach (clientClass clientCon in clients)
+                    {
+                        if (packet.id != clientCon.id)
+                        {
+                            clientCon.connection.Send(msg);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void start()
+        {
+            IPAddress ipAddress = IPAddress.Parse("127.0.0.1"); //local host ip
+            int port = 34197;
+
+            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
+
+            // Create a Socket that will use Tcp protocol
+            Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); //this uses ipv4 : InterNetwork
+
+            Thread SendHandlerThread = new Thread(() => SendHandler());
+            SendHandlerThread.Start();
+
+            listener.Bind(localEndPoint);
+            // Specify how many requests a Socket can listen before it gives Server busy response.
+            // We will listen 10 requests at a time
+            listener.Listen(10);
+
+            while (true) {
+                Socket clientSocket = listener.Accept();
+                clientClass newCon = new clientClass(clientSocket, players);
+                Thread myThread = new Thread(() => handlerThread(newCon));
+
+                myThread.Start();
+                
+                players++;
+                clients.Add(newCon);
+            }
+
+        }
+
+
+
+
+
+        public static int Main()
+        {
+            Console.WriteLine("Hello, World!");
+            start();
+            return 0;
+        }
+    }
+}
