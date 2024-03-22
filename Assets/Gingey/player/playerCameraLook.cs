@@ -100,6 +100,29 @@ public class playercameraLook : MonoBehaviour
         headJoint.transform.Rotate(currentXRot, 0f, 0f);
         headJoint.transform.Rotate(0f, currentYRot, 0f, Space.World);
 
+        if (leftRight != 0 || UpDown != 0 || temp != 0) {
+            basePacket packet = new movePacket();
+            movePacket pack = packet as movePacket;
+            pack.runningBool = playerAnimator.GetBool("runningBool");
+            pack.reverseBool = playerAnimator.GetBool("reverseBool");
+            pack.moveingBool = playerAnimator.GetBool("moveingBool");
+
+            pack.posx = player.transform.position.x;
+            pack.posy = player.transform.position.y;
+            pack.posz = player.transform.position.z;
+
+            pack.rotx = player.transform.eulerAngles.x;
+            pack.roty = player.transform.eulerAngles.y;
+            pack.rotz = player.transform.eulerAngles.z;
+
+            pack.rothx = headJoint.transform.eulerAngles.x;
+            pack.rothy = headJoint.transform.eulerAngles.y;
+            pack.rothz = headJoint.transform.eulerAngles.z;
+
+            GameObject.Find("NETWORKER").GetComponent<clientSide>().sendPacket(packet);
+        
+        }
+
         //float forward = Input.GetAxis("Vertical") * moveSpeed;
         //float side = Input.GetAxis("Horizontal") * moveSpeed;
 
