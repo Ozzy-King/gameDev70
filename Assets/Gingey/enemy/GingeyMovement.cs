@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
-public class ClickToMove : MonoBehaviour
+public class gingeyMovement : MonoBehaviour
 {
    
     private NavMeshAgent agent;
@@ -38,8 +38,9 @@ public class ClickToMove : MonoBehaviour
     {
 
         //targetPos = hit.point;
-        targetPos = GameObject.Find("player").transform.position;
-
+        if (GameObject.Find("player") != null) {
+            targetPos = GameObject.Find("player").transform.position;
+        }
 
         agent.SetDestination(targetPos);
 

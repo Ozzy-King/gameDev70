@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -10,10 +11,9 @@ public class settingMenuScript : MonoBehaviour
     public GameObject mouseSensitivityText;
 
     public void sliderUpdate() {
-        print("updateing text"+ mouseSensitivitySlider.GetComponent<Slider>().value.ToString());
+        string text = mouseSensitivitySlider.GetComponent<Slider>().value.ToString();
         TextMeshProUGUI test = mouseSensitivityText.GetComponent<TextMeshProUGUI>();
-        print(test);
-        mouseSensitivityText.GetComponent<TextMeshProUGUI>().text = mouseSensitivitySlider.GetComponent<Slider>().value.ToString();
+        test.text = text.Substring(0, Math.Min(3, text.Length));
     }
 
 
