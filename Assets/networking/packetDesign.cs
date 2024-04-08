@@ -6,7 +6,9 @@ public class basePacket
     {
         unknown = 0,
         movePacket = 1, //implimented
-        connectPacket = 2
+        connectPacket = 2,
+        disconnectPacket = 3,
+        pingpongPacket = 4
     }
 
     public uint id = 0; //given by the sending client
@@ -52,6 +54,9 @@ public class basePacket
                     if (!bool.TryParse(allData["runningBool"], out packet.runningBool)) { return null; }
                     if (!bool.TryParse(allData["moveingBool"], out packet.moveingBool)) { return null; }
                     if (!bool.TryParse(allData["reverseBool"], out packet.reverseBool)) { return null; }
+
+                    if (!bool.TryParse(allData["attackTrigger"], out packet.attackTrigger)) { return null; }
+                    if (!bool.TryParse(allData["dieTrigger"], out packet.dieTrigger)) { return null; }
 
                     return packet;
                 }
@@ -113,10 +118,13 @@ public class basePacket
                     dataString += "\"rothy\":" + movePacketInstance.rothy.ToString() + ",";//add packet type
                     dataString += "\"rothz\":" + movePacketInstance.rothz.ToString() + ",";//add packet type
 
-
+                    //dieTrigger
                     dataString += "\"runningBool\":" + movePacketInstance.runningBool.ToString() + ",";//add packet type
                     dataString += "\"moveingBool\":" + movePacketInstance.moveingBool.ToString() + ",";//add packet type
                     dataString += "\"reverseBool\":" + movePacketInstance.reverseBool.ToString() + ",";//add packet type
+
+                    dataString += "\"attackTrigger\":" + movePacketInstance.attackTrigger.ToString() + ",";//add packet type
+                    dataString += "\"dieTrigger\":" + movePacketInstance.dieTrigger.ToString() + ",";//add packet type
 
 
                     return dataString;
@@ -131,7 +139,26 @@ public class basePacket
 
                     return dataString;
                 }
+            case _packetType.disconnectPacket:
+                {
+                    disconnectPacket connectPacketInstance = this as disconnectPacket;
 
+                    int temp = (int)connectPacketInstance.packetType;
+                    dataString += temp.ToString() + ",";//add packet type
+                    dataString += "\"id\":" + connectPacketInstance.id.ToString() + ",";
+
+                    return dataString;
+                }
+            case _packetType.pingpongPacket:
+                {
+                    pingpongPacket connectPacketInstance = this as pingpongPacket;
+
+                    int temp = (int)connectPacketInstance.packetType;
+                    dataString += temp.ToString() + ",";//add packet type
+                    dataString += "\"id\":" + connectPacketInstance.id.ToString() + ",";
+
+                    return dataString;
+                }
             case _packetType.unknown:
             default:
                 return "";
@@ -141,13 +168,12 @@ public class basePacket
 
     public basePacket clone() {
         basePacket packet;
-        movePacket thisPacketInstance;
         switch (this.packetType)
         {
             case _packetType.movePacket:
                 packet = new movePacket();
                 {
-                    thisPacketInstance = this as movePacket;
+                    movePacket thisPacketInstance = this as movePacket;
                     movePacket sendPacketInstance = packet as movePacket;
 
                     sendPacketInstance.id = thisPacketInstance.id;
@@ -164,17 +190,41 @@ public class basePacket
                     sendPacketInstance.rothy = thisPacketInstance.rothy;
                     sendPacketInstance.rothz = thisPacketInstance.rothz;
 
+                    //dieTrigger
                     sendPacketInstance.runningBool = thisPacketInstance.runningBool;
                     sendPacketInstance.reverseBool = thisPacketInstance.reverseBool;
                     sendPacketInstance.moveingBool = thisPacketInstance.moveingBool;
+
+                    sendPacketInstance.attackTrigger = thisPacketInstance.attackTrigger;
+                    sendPacketInstance.dieTrigger = thisPacketInstance.dieTrigger;
                 }
                 break;
 
             case _packetType.connectPacket:
                 packet = new connectPacket();
                 {
-                    thisPacketInstance = this as movePacket;
+                    connectPacket thisPacketInstance = this as connectPacket;
                     connectPacket sendPacketInstance = packet as connectPacket;
+
+                    sendPacketInstance.id = thisPacketInstance.id;
+                    sendPacketInstance.packetType = thisPacketInstance.packetType;
+                }
+                break;
+            case _packetType.disconnectPacket:
+                packet = new disconnectPacket();
+                {
+                    disconnectPacket thisPacketInstance = this as disconnectPacket;
+                    disconnectPacket sendPacketInstance = packet as disconnectPacket;
+
+                    sendPacketInstance.id = thisPacketInstance.id;
+                    sendPacketInstance.packetType = thisPacketInstance.packetType;
+                }
+                break;
+            case _packetType.pingpongPacket:
+                packet = new pingpongPacket();
+                {
+                    pingpongPacket thisPacketInstance = this as pingpongPacket;
+                    pingpongPacket sendPacketInstance = packet as pingpongPacket;
 
                     sendPacketInstance.id = thisPacketInstance.id;
                     sendPacketInstance.packetType = thisPacketInstance.packetType;
@@ -209,6 +259,10 @@ public class movePacket : basePacket
     public bool runningBool = false;
     public bool moveingBool = false;
     public bool reverseBool = false;
+
+    public bool attackTrigger = false;
+    public bool dieTrigger = false;
+
     public movePacket() {
         this.packetType = _packetType.movePacket;
     }
@@ -217,5 +271,19 @@ public class connectPacket : basePacket {
 
     public connectPacket() {
         this.packetType = _packetType.connectPacket;
+    }
+}
+
+public class disconnectPacket : basePacket {
+    public disconnectPacket() {
+        this.packetType = _packetType.disconnectPacket;
+    }
+}
+
+public class pingpongPacket : basePacket
+{
+    public pingpongPacket()
+    {
+        this.packetType = _packetType.pingpongPacket;
     }
 }

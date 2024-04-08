@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 0.44
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.30126876, g: 0.33666557, b: 0.39235583, a: 0.44}
+  m_IndirectSpecularColor: {r: 0.30126876, g: 0.33666545, b: 0.39235583, a: 0.44}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4003,10 +4003,22 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1728200133}
-        m_TargetAssemblyTypeName: mainMenuScript, Assembly-CSharp
-        m_MethodName: QuitApplication
+      - m_Target: {fileID: 731117975}
+        m_TargetAssemblyTypeName: gameControllerScript, Assembly-CSharp
+        m_MethodName: startSinglePlayer
         m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1728200131}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4440,7 +4452,7 @@ GameObject:
   - component: {fileID: 307078347}
   - component: {fileID: 307078346}
   m_Layer: 5
-  m_Name: InputField (TMP)
+  m_Name: ipFeild
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9876,7 +9888,10 @@ MonoBehaviour:
   playerPrefab: {fileID: 1984860733596134465, guid: ec349b305dabcdf458a8ccde690a0eeb, type: 3}
   clientPrefab: {fileID: 399421282032282921, guid: 1c423b1d25183e140be20f8703e3c15c, type: 3}
   enemyPrefab: {fileID: 5618226867460834371, guid: 98b24813b7165a04c87f4b318f4513ae, type: 3}
-  menuCamera: {fileID: 1566093491}
+  menuCamera: {fileID: 1566093490}
+  ip: {fileID: 307078346}
+  port: {fileID: 1951333816}
+  PlayerMouseSens: 1
   gameState: 0
 --- !u!1 &731787412
 GameObject:
@@ -22235,7 +22250,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1773075211}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 731117975}
+        m_TargetAssemblyTypeName: gameControllerScript, Assembly-CSharp
+        m_MethodName: connectToServer
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 518120417}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1773075211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24584,7 +24611,7 @@ GameObject:
   - component: {fileID: 1951333817}
   - component: {fileID: 1951333816}
   m_Layer: 5
-  m_Name: InputField (TMP) (1)
+  m_Name: portFeild
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

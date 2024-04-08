@@ -32,6 +32,9 @@ public class clientSide : MonoBehaviour
     public Dictionary<uint, GameObject> players = new Dictionary<uint, GameObject>();
     Socket connection;
 
+    public string HostIP;
+    public int port;
+
     void clientRecvPrint(basePacket packet) {
         print("CLIENT_RECV>> " + packet.packetToString());
     }
@@ -55,20 +58,33 @@ public class clientSide : MonoBehaviour
         }
     }
 
-
-    void start()
+    public int connect()
     {
-        IPAddress Host = IPAddress.Parse("127.0.0.1"); //local host ip
-        int port = 34197;
+        IPAddress Host = IPAddress.Parse(HostIP); //local host ip
 
         IPEndPoint localEndPoint = new IPEndPoint(Host, port);
 
         // Create a Socket that will use Tcp protocol
         Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); //this uses ipv4 : InterNetwork
 
+        //sender.Blocking = false;
         //conenct to server
-        sender.Connect(localEndPoint);
-        this.connection = sender;
+        try
+        {
+            sender.Connect(localEndPoint);
+        }
+        catch(SocketException e) {
+            print(e);
+            Destroy(this.gameObject);
+            return 1;
+        }
+            this.connection = sender;
+        return 0;
+    }
+
+    public void start()
+    {
+
 
         //setup listener thread (handles packet sfrom server)
         Thread myThread = new Thread(() => ListenThread());
@@ -83,7 +99,7 @@ public class clientSide : MonoBehaviour
 
         basePacket processingPacket = new movePacket();
         movePacket packet = processingPacket as movePacket;
-        otherPlayerController playController = players[packet.id].GetComponent<otherPlayerController>();
+        playercameraLook playController = GameObject.Find("player").GetComponent<playercameraLook>();
         packet.posx = playController.player.transform.position.x;
         packet.posy = playController.player.transform.position.y;
         packet.posz = playController.player.transform.position.z;
@@ -122,10 +138,23 @@ public class clientSide : MonoBehaviour
             processingPacket = packetsToProcess.Dequeue();
             switch (processingPacket.packetType)
             {
+                //send back ping pong packet
+                case basePacket._packetType.pingpongPacket:
+                    { 
+                        pingpongPacket pack = new pingpongPacket();
+                        sendPacket(pack);
+                    }
+                    break;
 
                 case basePacket._packetType.connectPacket:
                     {
                         players.Add(processingPacket.id, Instantiate(playerModel, new Vector3(0,0,0), Quaternion.identity));
+                    }
+                    break;
+                case basePacket._packetType.disconnectPacket:
+                    {
+                        Destroy(players[processingPacket.id]);
+                        players.Remove(processingPacket.id);
                     }
                     break;
                 case basePacket._packetType.movePacket:

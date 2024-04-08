@@ -55,11 +55,14 @@ class server
     static void handlerThread(clientClass clientSoc)
     {
         Console.WriteLine("CONNECTED_CLINET_ID>> " + clientSoc.id.ToString());
-        while (true)
+        int quit = 0;
+        int disconnect = 0;
+        while (quit == 0)
         {
             string data = "";
             byte[] bytes = new byte[1024];
             int bytesRec = clientSoc.connection.Receive(bytes); //recvie packet from cleint
+            if (bytesRec <= 0) { quit = 1; break; }
             data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
 
             basePacket? parsedPacket = basePacket.parseData(data); //parse packet to packet class
@@ -67,11 +70,21 @@ class server
             if (parsedPacket != null) //if not null
             {
                 //handle packet
-                packetProcessor(ref parsedPacket, ref clientSoc);
-
+                quit = packetProcessor(ref parsedPacket, ref clientSoc);
+                disconnect = quit;
                 packetQueue.Enqueue(parsedPacket);
             }
         }
+        if (disconnect == 0) {//try to do a grasful disconnect from disgrasful socket disconnect
+            clientSoc.connection.Shutdown(SocketShutdown.Both);
+            clientSoc.connection.Close();
+            disconnectPacket pack = new disconnectPacket();
+            pack.id = clientSoc.id;
+            packetQueue.Enqueue(pack);
+        }
+        //removes client from list
+        clients.Remove(clientSoc);
+
     }
 
     //broad cast packets to all player except the one who sent it.
@@ -98,7 +111,7 @@ class server
     //starts server (create broadcast handler and cleint handlers for when they connect)
     static void Main()
     {
-        IPAddress ipAddress = IPAddress.Parse("127.0.0.1"); //local host ip
+        IPAddress ipAddress = IPAddress.Parse("192.168.1.133"); //local host ip
         int port = 34197;
 
         IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
@@ -134,7 +147,7 @@ class server
         SendTo.connection.Send(msg);
     }
 
-    static void packetProcessor(ref basePacket thePacket, ref clientClass clientSoc) {
+    static int packetProcessor(ref basePacket thePacket, ref clientClass clientSoc) {
 
         //switch to process packets
         switch (thePacket.packetType) {
@@ -152,7 +165,15 @@ class server
                         sendPacket(clientSoc, client.PlayerPosData);//send tother players poses to new client
                     }
                 }
+                break;
+            case basePacket._packetType.disconnectPacket:
+                { 
+                    //if discconect then return 1 so the players thread quits
+                    //but also makesure that the disconenct packet for the player get sent to all other players first
+                    thePacket.id = clientSoc.id;
+                    return 1;
 
+                }
                 break;
             case basePacket._packetType.movePacket:
                 {
@@ -168,5 +189,6 @@ class server
             default:
                 break;
         }
+        return 0;
     }
 }

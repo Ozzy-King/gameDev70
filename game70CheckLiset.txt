@@ -1,0 +1,59 @@
+character
+	actions (animated)
+		movement (code working) (added walking, running, headmovement)
+		attack (added)
+		death (added)
+	3rd person (added first person)
+	can explore scene(move around scene) (checked)
+	custom model and texture (check)
+	has sound FX(effect)/particle
+	
+ui
+	start (added)
+	pause
+	game over
+	game?
+	startscreeen (added)
+		custom art (not font) (added)
+		custom animation (buttons get highlighted)
+	menu music
+	interaction sound effect on menus
+
+game
+	ingame tutorial
+	atleast one npc(non playerable character)(dialogue, follow/chase player) (added)
+	assets
+		atleast one of:
+			buildingg (added)
+			rock/obstacle
+			plant/street item	
+		custom model and texture
+	custom skybox
+	all game object have custom models and textures	(added so far)
+	all game objects have sound fx and/or particle 
+	
+	use audio mixer to generate dynamic sounds? 
+
+	use atleast one shader
+
+code 
+	comments	
+	resuable and extendedable code (methods, interfaces, abstract classes)
+
+
+
+
+itch.io page
+	link to working game executable
+	game description
+	list of controls, instructions for installation
+	3 game screen shots
+	custom header title image for page
+	custom background art
+	youtube video linked 30sec -> 2min
+
+game title:
+	 the broken
+
+
+https://www.1001fonts.com/augusta-font.html - a font

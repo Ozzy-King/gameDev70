@@ -10,6 +10,8 @@ public class otherPlayerController : MonoBehaviour
     public Animator playerAnimator;
     public movePacket PositionInfo;
 
+    public bool inDie = false;
+    public bool inAttack = false;
 
     // Start is called before the first frame update
     void Start()
@@ -26,5 +28,14 @@ public class otherPlayerController : MonoBehaviour
         playerAnimator.SetBool("moveingBool", PositionInfo.moveingBool);
         playerAnimator.SetBool("reverseBool", PositionInfo.reverseBool);
         playerAnimator.SetBool("runningBool", PositionInfo.runningBool);
+        if (PositionInfo.attackTrigger == true && inAttack == false) { 
+            playerAnimator.SetTrigger("attackTrig");
+        }
+        inAttack = PositionInfo.attackTrigger;
+        if (PositionInfo.dieTrigger == true && inDie == false)
+        {
+            playerAnimator.SetTrigger("dieTrig");
+        }
+        inDie = PositionInfo.dieTrigger;
     }
 }

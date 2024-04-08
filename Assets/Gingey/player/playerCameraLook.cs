@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// full controller for player movemnet and camera movemnt
@@ -19,13 +20,31 @@ public class playercameraLook : MonoBehaviour
 
     public Animator playerAnimator;
 
-    float walkSpeed = 13f;
-    float runSpeed = 26.1f;
+    public NavMeshAgent agent;
+
+    bool dieTrig = false;
+    bool attackTrig = false;
+
+    float walkSpeed = 20.98f;
+    float runSpeed = 28.1f;
+
+    
+    public int health = 100;
 
     // Start is called before the first frame update
     void Start()
     {
         playerAnimator = GetComponent<Animator>();
+        agent = GetComponent<NavMeshAgent>();
+        agent.acceleration = 100000;
+    }
+
+    public void takeDamage(int amount) {
+        health -= amount;
+    }
+    public void healDamage(int amount)
+    {
+        health += amount;
     }
 
     // Update is called once per frame
@@ -33,74 +52,99 @@ public class playercameraLook : MonoBehaviour
     {
         //player movement in world
         //needs to update first to the head rotateion sync to body movement porperly else the body move and the head get left behuind till next update
-
-        //forawrd1 backward-1
-        float temp;
-        if ((temp = Input.GetAxis("Vertical")) != 0)
+        float temp =0;
+        float leftRight=0;
+        float UpDown = 0;
+        if (health > 0)
         {
-            playerAnimator.SetBool("moveingBool", true);
-            playerAnimator.SetBool("reverseBool", (temp == -1 ? true : false)) ;
-            moveSpeed = walkSpeed;
 
-            if (Input.GetKey(KeyCode.LeftShift))
-            { //for if running
-                playerAnimator.SetBool("runningBool", true);
-                moveSpeed = runSpeed;
+            //forawrd1 backward-1
+            if ((temp = Input.GetAxis("Vertical")) != 0)
+            {
+                playerAnimator.SetBool("moveingBool", true);
+                playerAnimator.SetBool("reverseBool", (temp == -1 ? true : false));
+                agent.speed = walkSpeed;
+
+                if (Input.GetKey(KeyCode.LeftShift))
+                { //for if running
+                    playerAnimator.SetBool("runningBool", true);
+                    agent.speed = runSpeed;
+                }
+                else
+                {
+                    playerAnimator.SetBool("runningBool", false);
+                    agent.speed = walkSpeed;
+                }
+
+
+                player.transform.Rotate(0, currentYRot, 0);
+                currentYRot = 0;
+                if (temp == 1)
+                {
+                    agent.Move(transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc
+                }
+                else {
+                    agent.Move(-transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc    
+                }
             }
-            else {
+            else
+            {
+                playerAnimator.SetBool("moveingBool", false);
                 playerAnimator.SetBool("runningBool", false);
-                moveSpeed = walkSpeed;
+                agent.isStopped = false;
             }
 
 
-            player.transform.Rotate(0, currentYRot, 0);
-            currentYRot = 0;
-            if (temp == 1)
+
+
+
+            //camera movement along with head movement
+            // gathered mouse values 
+            leftRight = Input.GetAxis("Mouse X") * mouseSensitivity;
+            UpDown = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+            //add values to cameras up down abnd clamp when needed
+            currentXRot += -UpDown;
+            currentXRot = Mathf.Clamp(currentXRot, -36, 36);
+
+            //add values to left right and sortout overlfow by rotating the body and maxing out head rotation
+            currentYRot += leftRight;
+            if (currentYRot > 33)
             {
-                transform.position += transform.forward * Time.deltaTime * moveSpeed;
+                player.transform.Rotate(0, currentYRot - 33, 0);
+                //currentYRot = 36;
             }
-            if (temp == -1)
+            else if (currentYRot < -33)
             {
-                transform.position -= transform.forward * Time.deltaTime * moveSpeed;
+                player.transform.Rotate(0, currentYRot + 33, 0);
+                //currentYRot = -36;
             }
+            currentYRot = Mathf.Clamp(currentYRot, -33, 33);
+
+            //resert position of head so its level with world(its not originally due to animation)
+            headJoint.transform.eulerAngles = player.transform.eulerAngles;// new Vector3(0f,0f,0f);
+                                                                           //rotate to correct look poisiton
+            headJoint.transform.Rotate(currentXRot, 0f, 0f);
+            headJoint.transform.Rotate(0f, currentYRot, 0f, Space.World);
         }
-        else {
-            playerAnimator.SetBool("moveingBool", false);
-            playerAnimator.SetBool("runningBool", false);
+        //for deteting when death animation should be played and sent to other clients
+        if (health == 0) {
+            health = -1; //setto -1 so only one death animation is sent in packet
+            playerAnimator.SetTrigger("dieTrig");
+            dieTrig = true;
+            temp = 1;
+        }
+        //if left mouse button is clicked and not in attack animation
+        if (Input.GetMouseButtonDown(0) && !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("attack")) {
+            attackTrig = true;
+            playerAnimator.SetTrigger("attackTrig");
+            temp = 1;
         }
 
+        GameObject networkObj;
 
-
-
-
-        //camera movement along with head movement
-        // gathered mouse values 
-        float leftRight = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float UpDown = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        //add values to cameras up down abnd clamp when needed
-        currentXRot += -UpDown;
-        currentXRot = Mathf.Clamp(currentXRot, -36, 36);
-
-        //add values to left right and sortout overlfow by rotating the body and maxing out head rotation
-        currentYRot += leftRight;
-        if (currentYRot > 33) {
-            player.transform.Rotate(0, currentYRot - 33, 0);
-            //currentYRot = 36;
-        }
-        else if (currentYRot < -33) {
-            player.transform.Rotate(0, currentYRot + 33, 0);
-            //currentYRot = -36;
-        }
-        currentYRot = Mathf.Clamp(currentYRot, -33, 33);
-
-        //resert position of head so its level with world(its not originally due to animation)
-        headJoint.transform.eulerAngles = player.transform.eulerAngles ;// new Vector3(0f,0f,0f);
-        //rotate to correct look poisiton
-        headJoint.transform.Rotate(currentXRot, 0f, 0f);
-        headJoint.transform.Rotate(0f, currentYRot, 0f, Space.World);
-
-        if (leftRight != 0 || UpDown != 0 || temp != 0) {
+        if ((leftRight != 0 || UpDown != 0 || temp != 0) && (networkObj=GameObject.Find("NETWORKER") ) != null) {
+            clientSide networkObjScript = networkObj.GetComponent<clientSide>();
             basePacket packet = new movePacket();
             movePacket pack = packet as movePacket;
             pack.runningBool = playerAnimator.GetBool("runningBool");
@@ -119,7 +163,13 @@ public class playercameraLook : MonoBehaviour
             pack.rothy = headJoint.transform.eulerAngles.y;
             pack.rothz = headJoint.transform.eulerAngles.z;
 
-            GameObject.Find("NETWORKER").GetComponent<clientSide>().sendPacket(packet);
+            pack.attackTrigger = attackTrig;
+            attackTrig = false;
+            pack.dieTrigger = dieTrig;
+            dieTrig = false;
+
+
+            networkObjScript.sendPacket(packet);
         
         }
 
