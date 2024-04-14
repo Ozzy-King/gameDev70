@@ -87,11 +87,11 @@ public class playercameraLook : MonoBehaviour
                 currentYRot = 0;
                 if (temp == 1)
                 {
-                    agent.Move(transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc
+                    agent.Move(transform.forward * (agent.speed == runSpeed ? 2 : 1));//moves the agent as character instead of npc
                 }
-                else
+                else if(temp == -1)
                 {
-                    agent.Move(-transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc    
+                    agent.Move(-transform.forward * (agent.speed == runSpeed ? 2 : 1));//moves the agent as character instead of npc    
                 }
             }
             else
@@ -160,12 +160,23 @@ public class playercameraLook : MonoBehaviour
 
         }
         //for deteting when death animation should be played and sent to other clients
-        if (health <= 0 && dead == false)
+        if (health <= 0)
         {
-            dead = true;
-            playerAnimator.SetTrigger("dieTrig");
-            dieTrig = true;
-            temp = 1;
+            float stateTime = playerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            if (!dead)
+            {
+                playerAnimator.SetTrigger("dieTrig");
+                dead = true;
+                dieTrig = true;
+                temp = 1;
+            }
+            //if in the animtion is in die and is at the end of the animation destory object
+            else if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("die") && ((int)stateTime) == 1)
+            {
+                GameObject.Find("GameController").GetComponent<gameControllerScript>().BackMainMenu();
+            }
+            
+            
         }
 
         //set hlaeth bar to current health

@@ -37,7 +37,7 @@ public class gingeyMovement : MonoBehaviour
         ModelAnimator.SetInteger("moveStyle", moveStyle);
         agent.speed = moveSpeeds[moveStyle];
 
-        health = Random.Range(80, 100);
+        health = Random.Range(10, 20);
         targetPos = gameObject.transform.position;
     }
 
@@ -76,6 +76,7 @@ public class gingeyMovement : MonoBehaviour
             if (!ModelAnimator.GetNextAnimatorStateInfo(0).IsName("attack") && !ModelAnimator.GetCurrentAnimatorStateInfo(0).IsName("attack"))
             {
                 attack = false;
+                agent.isStopped = false;
             }
         }
         //if still alive and not attacking

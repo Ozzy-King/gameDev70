@@ -132,7 +132,7 @@ public class gameControllerScript : MonoBehaviour
         }
 
         //if game is running
-        if (gameState == gamestates.running && Random.Range(0, 50) == 0 && isSinglePlayer) {
+        if (gameState == gamestates.running && isSinglePlayer) {
 
             //spawn an enemy if needed
 
