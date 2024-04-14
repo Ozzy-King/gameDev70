@@ -52,6 +52,7 @@ public class playercameraLook : MonoBehaviour
     {
         health += amount;
     }
+    bool stepping = false;
 
     // Update is called once per frame
     void LateUpdate()
@@ -92,6 +93,13 @@ public class playercameraLook : MonoBehaviour
                 else if(temp == -1)
                 {
                     agent.Move(-transform.forward * (agent.speed == runSpeed ? 2 : 1));//moves the agent as character instead of npc    
+                }
+                if (!stepping) {
+                    GameObject.Find("menuScreens").GetComponent<soundController>().playRandomStep();
+                    stepping = true;
+                }
+                else if(!GameObject.Find("menuScreens").GetComponent<soundController>().soundSource.isPlaying) {
+                    stepping = false;
                 }
             }
             else
@@ -165,6 +173,7 @@ public class playercameraLook : MonoBehaviour
             float stateTime = playerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
             if (!dead)
             {
+                GameObject.Find("menuScreens").GetComponent<soundController>().playDeathSound();
                 playerAnimator.SetTrigger("dieTrig");
                 dead = true;
                 dieTrig = true;
