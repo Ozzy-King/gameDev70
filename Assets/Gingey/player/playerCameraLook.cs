@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 /// <summary>
 /// full controller for player movemnet and camera movemnt
@@ -28,8 +30,11 @@ public class playercameraLook : MonoBehaviour
     float walkSpeed = 20.98f;
     float runSpeed = 28.1f;
 
-    
+    public bool dead = false;
     public int health = 100;
+
+    public GameObject pausedMenu;
+    public bool isPaused = false;
 
     // Start is called before the first frame update
     void Start()
@@ -37,6 +42,7 @@ public class playercameraLook : MonoBehaviour
         playerAnimator = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
         agent.acceleration = 100000;
+        pausedMenu = GameObject.Find("pauseScreen");
     }
 
     public void takeDamage(int amount) {
@@ -55,7 +61,7 @@ public class playercameraLook : MonoBehaviour
         float temp =0;
         float leftRight=0;
         float UpDown = 0;
-        if (health > 0)
+        if (health > 0 && isPaused == false)
         {
 
             //forawrd1 backward-1
@@ -83,7 +89,8 @@ public class playercameraLook : MonoBehaviour
                 {
                     agent.Move(transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc
                 }
-                else {
+                else
+                {
                     agent.Move(-transform.forward * (agent.speed == runSpeed ? 5 : 1));//moves the agent as character instead of npc    
                 }
             }
@@ -91,7 +98,8 @@ public class playercameraLook : MonoBehaviour
             {
                 playerAnimator.SetBool("moveingBool", false);
                 playerAnimator.SetBool("runningBool", false);
-                agent.isStopped = false;
+                agent.Stop();
+                //agent.isStopped = true;
             }
 
 
@@ -126,20 +134,43 @@ public class playercameraLook : MonoBehaviour
                                                                            //rotate to correct look poisiton
             headJoint.transform.Rotate(currentXRot, 0f, 0f);
             headJoint.transform.Rotate(0f, currentYRot, 0f, Space.World);
+
+            //if left mouse button is clicked and not in attack animation
+            if (Input.GetMouseButtonDown(0) && !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("attack"))
+            {
+                //set state to attacking will send state to other player if online
+                attackTrig = true;
+                playerAnimator.SetTrigger("attackTrig");
+                temp = 1;
+
+                //checks if enemy is in front, if so damage the enemy
+                //currently onehit kills enemys
+                RaycastHit hitEnemy;
+                if (Physics.Raycast(player.transform.position, transform.forward, out hitEnemy, 10f, 1<<6))
+                {
+                    hitEnemy.transform.gameObject.GetComponent<gingeyMovement>().health -= 10;
+                }
+
+            }
+
+            if (Input.GetKey(KeyCode.P)) {
+                GameObject.Find("GameController").GetComponent<gameControllerScript>().pause(true);
+                isPaused = true;
+            }
+
         }
         //for deteting when death animation should be played and sent to other clients
-        if (health == 0) {
-            health = -1; //setto -1 so only one death animation is sent in packet
+        if (health <= 0 && dead == false)
+        {
+            dead = true;
             playerAnimator.SetTrigger("dieTrig");
             dieTrig = true;
             temp = 1;
         }
-        //if left mouse button is clicked and not in attack animation
-        if (Input.GetMouseButtonDown(0) && !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("attack")) {
-            attackTrig = true;
-            playerAnimator.SetTrigger("attackTrig");
-            temp = 1;
-        }
+
+        //set hlaeth bar to current health
+        GameObject.Find("GameController").GetComponent<gameControllerScript>().userMenu.transform.GetChild(0).GetComponent<Slider>().value = health;
+
 
         GameObject networkObj;
 

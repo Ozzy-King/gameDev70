@@ -4,6 +4,7 @@
 using System.Data;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 //2, "tets1":1, "test2":2
@@ -37,6 +38,23 @@ class clientClass
         this.connection = con;
         this.id = id;
         this.PlayerPosData = new movePacket();
+    }
+}
+
+class enemyClass {
+    public movePacket target = new movePacket();
+    public movePacket position = new movePacket();
+    public uint ID;
+    public enemyClass(uint id, float x, float y, float z) {
+        ID = id;
+        target.posx = 0;
+        target.posy = 0;
+        target.posz = 0;
+
+        position.posx = x;
+        position.posy = y;
+        position.posz = z;
+
     }
 }
 
@@ -108,6 +126,53 @@ class server
         }
     }
 
+    static List<enemyClass> enemyList = new List<enemyClass>();
+    static int maxEnemy = 20;
+    static uint enemyID = 0;
+    public static void enemyController()
+    {
+        while (true)
+        {
+            //spawn eney if able to
+            Random randy = new Random();
+            if (randy.Next(0, 50) == 0 && maxEnemy > 0)
+            {
+                
+                enemySpawnPacket spwnEnemy = new enemySpawnPacket();
+                spwnEnemy.id = enemyID;
+                spwnEnemy.spawnx = ((randy.NextSingle() * 1000f) % 800) - 400f; //random number between -400 and 400
+                spwnEnemy.spawnz = ((randy.NextSingle() * 1000f) % 800) - 400f;
+                enemyList.Add(new enemyClass(enemyID, spwnEnemy.spawnx, 0, spwnEnemy.spawnz));
+                
+                packetQueue.Enqueue(spwnEnemy);
+                Console.WriteLine("server has spawned enemy >> enemy:" + enemyList[^1].ID.ToString());
+                enemyID++;
+                maxEnemy--;
+                
+            }
+
+            ////move enemy to closest player TODO add this and impliment everything into the clinet side too
+            //for (int i = 0; i < enemyList.Count; i++)
+            //{
+            //    movePacket closest = new movePacket();
+            //    for (int j = 0; j < clients.Count; j++) {
+                    
+            //    }
+
+
+
+
+
+
+            //}
+
+
+        }
+
+
+
+    }
+
     //starts server (create broadcast handler and cleint handlers for when they connect)
     static void Main()
     {
@@ -120,13 +185,15 @@ class server
         Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp); //this uses ipv4 : InterNetwork
 
         Thread SendHandlerThread = new Thread(() => broadcastHandler());
+        Thread enemyHandlerThread = new Thread(() => enemyController());
         SendHandlerThread.Start();
+        
 
         listener.Bind(localEndPoint);
         // Specify how many requests a Socket can listen before it gives Server busy response.
         // We will listen 10 requests at a time
         listener.Listen(10);
-
+        enemyHandlerThread.Start();
         while (true)
         {
             Socket clientSocket = listener.Accept();
@@ -163,6 +230,14 @@ class server
                         clientSync.id = client.id;
                         sendPacket(clientSoc, clientSync); //send connect packets to new client
                         sendPacket(clientSoc, client.PlayerPosData);//send tother players poses to new client
+                    }
+                    //send the enemys and thier current positions to player
+                    foreach (enemyClass en in enemyList) {
+                        enemySpawnPacket packet = new enemySpawnPacket();
+                        packet.id = en.ID;
+                        packet.spawnx = en.position.posx;
+                        packet.spawnz = en.position.posz;
+                        sendPacket(clientSoc, packet);
                     }
                 }
                 break;

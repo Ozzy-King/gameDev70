@@ -1,7 +1,7 @@
 character
 	actions (animated)
 		movement (code working) (added walking, running, headmovement)
-		attack (added)
+		attack (added) (damages enemys)
 		death (added)
 	3rd person (added first person)
 	can explore scene(move around scene) (checked)

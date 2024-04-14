@@ -8,7 +8,9 @@ public class basePacket
         movePacket = 1, //implimented
         connectPacket = 2,
         disconnectPacket = 3,
-        pingpongPacket = 4
+        pingpongPacket = 4,
+        enemySpawnPacket= 5,
+        enemyMovePacket = 6
     }
 
     public uint id = 0; //given by the sending client
@@ -37,25 +39,40 @@ public class basePacket
                     movePacket packet = new movePacket();
                     packet.packetType = (_packetType)packetType;
                     //assign all values
+                    if (!allData.ContainsKey("id")) { goto case _packetType.unknown; }
                     if (!uint.TryParse(allData["id"], out packet.id)) { return null; }
 
+                    if (!allData.ContainsKey("posx")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["posx"], out packet.posx)) { return null; }
+                    if (!allData.ContainsKey("posy")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["posy"], out packet.posy)) { return null; }
+                    if (!allData.ContainsKey("posz")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["posz"], out packet.posz)) { return null; }
 
+                    if (!allData.ContainsKey("rotx")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["rotx"], out packet.rotx)) { return null; }
+                    if (!allData.ContainsKey("roty")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["roty"], out packet.roty)) { return null; }
+                    if (!allData.ContainsKey("rotz")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["rotz"], out packet.rotz)) { return null; }
 
+                    if (!allData.ContainsKey("rothx")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["rothx"], out packet.rothx)) { return null; }
+                    if (!allData.ContainsKey("rothy")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["rothy"], out packet.rothy)) { return null; }
+                    if (!allData.ContainsKey("rothz")) { goto case _packetType.unknown; }
                     if (!float.TryParse(allData["rothz"], out packet.rothz)) { return null; }
 
+                    if (!allData.ContainsKey("runningBool")) { goto case _packetType.unknown; }
                     if (!bool.TryParse(allData["runningBool"], out packet.runningBool)) { return null; }
+                    if (!allData.ContainsKey("moveingBool")) { goto case _packetType.unknown; }
                     if (!bool.TryParse(allData["moveingBool"], out packet.moveingBool)) { return null; }
+                    if (!allData.ContainsKey("reverseBool")) { goto case _packetType.unknown; }
                     if (!bool.TryParse(allData["reverseBool"], out packet.reverseBool)) { return null; }
 
+                    if (!allData.ContainsKey("attackTrigger")) { goto case _packetType.unknown; }
                     if (!bool.TryParse(allData["attackTrigger"], out packet.attackTrigger)) { return null; }
+                    if (!allData.ContainsKey("dieTrigger")) { goto case _packetType.unknown; }
                     if (!bool.TryParse(allData["dieTrigger"], out packet.dieTrigger)) { return null; }
 
                     return packet;
@@ -65,11 +82,47 @@ public class basePacket
                     connectPacket packet = new connectPacket();
 
                     packet.packetType = (_packetType)packetType;
+                    if (!allData.ContainsKey("id")) { goto case _packetType.unknown; }
                     if (!uint.TryParse(allData["id"], out packet.id)) { return null; }
 
                     return packet;
                 }
+            case _packetType.enemySpawnPacket:
+                {
+                    enemySpawnPacket packet = new enemySpawnPacket();
+
+                    packet.packetType = (_packetType)packetType;
+                    if (!allData.ContainsKey("id")) { goto case _packetType.unknown; }
+                    if (!uint.TryParse(allData["id"], out packet.id)) { return null; }
+
+                    if (!allData.ContainsKey("spawnx")) { goto case _packetType.unknown; }
+                    if (!float.TryParse(allData["spawnx"], out packet.spawnx)) { return null; }
+                    if (!allData.ContainsKey("spawnz")) { goto case _packetType.unknown; }
+                    if (!float.TryParse(allData["spawnz"], out packet.spawnz)) { return null; }
+
+                    return packet;
+                }
+            case _packetType.enemyMovePacket:
+                {
+                    enemyMovePacket packet = new enemyMovePacket();
+
+                    packet.packetType = (_packetType)packetType;
+                    if (!allData.ContainsKey("id")) { goto case _packetType.unknown; }
+                    if (!uint.TryParse(allData["id"], out packet.id)) { return null; }
+
+                    if (!allData.ContainsKey("targetx")) { goto case _packetType.unknown; }
+                    if (!float.TryParse(allData["targetx"], out packet.targetx)) { return null; }
+                    if (!allData.ContainsKey("targety")) { goto case _packetType.unknown; }
+                    if (!float.TryParse(allData["targety"], out packet.targety)) { return null; }
+                    if (!allData.ContainsKey("targetz")) { goto case _packetType.unknown; }
+                    if (!float.TryParse(allData["targetz"], out packet.targetz)) { return null; }
+
+                    return packet;
+                }
             case _packetType.unknown:
+                basePacket unknow = new basePacket();
+                unknow.packetType = _packetType.unknown;
+                return unknow;
             default:
                 return null;
 
@@ -159,6 +212,32 @@ public class basePacket
 
                     return dataString;
                 }
+            case _packetType.enemySpawnPacket:
+                {
+                    enemySpawnPacket connectPacketInstance = this as enemySpawnPacket;
+
+                    int temp = (int)connectPacketInstance.packetType;
+                    dataString += temp.ToString() + ",";//add packet type
+                    dataString += "\"id\":" + connectPacketInstance.id.ToString() + ",";
+                    dataString += "\"spawnx\":" + connectPacketInstance.spawnx.ToString() + ",";
+                    dataString += "\"spawnz\":" + connectPacketInstance.spawnz.ToString() + ",";
+
+                    return dataString;
+                }
+            case _packetType.enemyMovePacket:
+                {
+                    enemyMovePacket connectPacketInstance = this as enemyMovePacket;
+
+                    int temp = (int)connectPacketInstance.packetType;
+                    dataString += temp.ToString() + ",";//add packet type
+                    dataString += "\"id\":" + connectPacketInstance.id.ToString() + ",";
+                    dataString += "\"spawnx\":" + connectPacketInstance.targetx.ToString() + ",";
+                    dataString += "\"spawny\":" + connectPacketInstance.targety.ToString() + ",";
+                    dataString += "\"spawnz\":" + connectPacketInstance.targetz.ToString() + ",";
+
+                    return dataString;
+
+                }
             case _packetType.unknown:
             default:
                 return "";
@@ -230,7 +309,34 @@ public class basePacket
                     sendPacketInstance.packetType = thisPacketInstance.packetType;
                 }
                 break;
+            case _packetType.enemySpawnPacket:
+                packet = new pingpongPacket();
+                {
+                    enemySpawnPacket thisPacketInstance = this as enemySpawnPacket;
+                    enemySpawnPacket sendPacketInstance = packet as enemySpawnPacket;
+
+                    sendPacketInstance.id = thisPacketInstance.id;
+                    sendPacketInstance.packetType = thisPacketInstance.packetType;
+                    sendPacketInstance.spawnx = thisPacketInstance.spawnx;
+                    sendPacketInstance.spawnz = thisPacketInstance.spawnz;
+                }
+                break;
+            case _packetType.enemyMovePacket:
+                packet = new pingpongPacket();
+                {
+                    enemyMovePacket thisPacketInstance = this as enemyMovePacket;
+                    enemyMovePacket sendPacketInstance = packet as enemyMovePacket;
+
+                    sendPacketInstance.id = thisPacketInstance.id;
+                    sendPacketInstance.targetx = thisPacketInstance.targetx;
+                    sendPacketInstance.targety = thisPacketInstance.targety;
+                    sendPacketInstance.targetz = thisPacketInstance.targetz;
+                }
+                break;
             case _packetType.unknown:
+                packet = new basePacket();
+                packet.packetType = _packetType.unknown;
+                break;
             default:
                 return null;
 
@@ -285,5 +391,20 @@ public class pingpongPacket : basePacket
     public pingpongPacket()
     {
         this.packetType = _packetType.pingpongPacket;
+    }
+}
+
+public class enemySpawnPacket : basePacket {
+
+    public float spawnx, spawnz;
+    public enemySpawnPacket() {
+        this.packetType = _packetType.enemySpawnPacket;
+    }
+}
+public class enemyMovePacket : basePacket {
+    public float targetx, targety, targetz;
+    public enemyMovePacket()
+    {
+        this.packetType = _packetType.enemyMovePacket;
     }
 }

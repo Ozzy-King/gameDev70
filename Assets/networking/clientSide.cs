@@ -30,6 +30,7 @@ public class clientSide : MonoBehaviour
     public GameObject playerModel;
     Queue<basePacket> packetsToProcess = new Queue<basePacket>(); 
     public Dictionary<uint, GameObject> players = new Dictionary<uint, GameObject>();
+    public Dictionary<uint, GameObject> enemys = new Dictionary<uint, GameObject>();
     Socket connection;
 
     public string HostIP;
@@ -136,6 +137,7 @@ public class clientSide : MonoBehaviour
         for (int i = 0; i < 5 && packetsToProcess.Count > 0; i++)
         {
             processingPacket = packetsToProcess.Dequeue();
+            if (processingPacket == null) { return; }
             switch (processingPacket.packetType)
             {
                 //send back ping pong packet
@@ -164,6 +166,25 @@ public class clientSide : MonoBehaviour
                         playController.PositionInfo = (movePacket)packet.clone();
                     }
                     break;
+
+                //spawns new enemy
+                case basePacket._packetType.enemySpawnPacket:
+                    {
+                        enemySpawnPacket packet = processingPacket as enemySpawnPacket;
+                        GameObject en = Instantiate(GameObject.Find("GameController").GetComponent<gameControllerScript>().enemyPrefab, new Vector3(packet.spawnx, 0, packet.spawnz), Quaternion.identity);
+                        print(packet.packetToString());
+                        en.name = "enemy" + packet.id.ToString();
+                        enemys.Add(packet.id, en);
+                    }
+                    break;
+                //give the enmy ai a new target position
+                case basePacket._packetType.enemyMovePacket:
+                    {
+                        enemyMovePacket packet = processingPacket as enemyMovePacket;
+                        enemys[packet.id].GetComponent<gingeyMovement>().targetPos = new Vector3(packet.targetx, packet.targety, packet.targetz);
+                    }
+                    break;
+
                 case basePacket._packetType.unknown:
                 default:
                     break;

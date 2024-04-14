@@ -6,6 +6,7 @@ public class mainMenuScript : MonoBehaviour
 {
 
 
+
     public void QuitApplication() { 
         Application.Quit();
     }

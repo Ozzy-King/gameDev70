@@ -18,6 +18,11 @@ public class gingeyMovement : MonoBehaviour
 
     public float distToWalk = 0.005f;
 
+    public int health = 100;
+    public bool dead = false;
+    public bool attack = false;
+
+    public bool paused = false;
 
     void Start() {
         agent = GetComponent<NavMeshAgent>();
@@ -32,29 +37,84 @@ public class gingeyMovement : MonoBehaviour
         ModelAnimator.SetInteger("moveStyle", moveStyle);
         agent.speed = moveSpeeds[moveStyle];
 
+        health = Random.Range(80, 100);
+        targetPos = gameObject.transform.position;
+    }
+
+    public void targetOBJ(GameObject obj)
+    {
+            targetPos = obj.transform.position;
+    }
+    public void stopMove(bool stop) {
+        paused = stop;
+    }
+
+    public void attackplayer(GameObject obj)
+    {
+        ModelAnimator.SetTrigger("attackTrig");
+        //if withing 10 units
+        playercameraLook test1;
+        //if the obj attack has the playerCameraLook script minus health
+        if ((test1 = obj.GetComponent<playercameraLook>()) != null)
+        {
+            test1.health -= 3;
+        }
+        agent.isStopped = true;
+        
+        attack = true;
     }
 
     void Update()
     {
-
-        //targetPos = hit.point;
-        if (GameObject.Find("player") != null) {
-            targetPos = GameObject.Find("player").transform.position;
+        //stops subsiquence attacks till the current one is done
+        if (paused)
+        {
+            agent.SetDestination(gameObject.transform.position);
         }
-
-        agent.SetDestination(targetPos);
-
-
-        //based on distance from previous and new position set walking annimation
-        if (Vector3.Distance(oldPos, gameObject.transform.position) < distToWalk) {
-            ModelAnimator.SetBool("moveingBool", false);
+        else if (attack) {
+            float stateTime = ModelAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            if (!ModelAnimator.GetNextAnimatorStateInfo(0).IsName("attack") && !ModelAnimator.GetCurrentAnimatorStateInfo(0).IsName("attack"))
+            {
+                attack = false;
+            }
         }
-        else {
-            ModelAnimator.SetBool("moveingBool", true);
-        }
-        oldPos = gameObject.transform.position;
+        //if still alive and not attacking
+        else if (health > 0 && !attack)
+        {
+            agent.SetDestination(targetPos);
 
-        // Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        // Debug.DrawLine(ray.origin, ray.direction * 20, Color.red);
+            //based on distance from previous and new position set walking annimation
+            if (Vector3.Distance(oldPos, gameObject.transform.position) < distToWalk)
+            {
+                ModelAnimator.SetBool("moveingBool", false);
+            }
+            else
+            {
+                ModelAnimator.SetBool("moveingBool", true);
+            }
+            oldPos = gameObject.transform.position;
+
+            //when the ray hits the clinets player the enemy will attack the client and reduce helth if it one of the the other players it will just show the attack animation
+            RaycastHit playerHit;
+            if (Physics.Raycast(gameObject.transform.position, transform.forward, out playerHit, 10f, 1 << 7))
+            {
+                attackplayer(playerHit.transform.gameObject);
+            }
+
+            Debug.DrawLine(gameObject.transform.position, gameObject.transform.position + (gameObject.transform.forward * 10), Color.red);
+        }
+        //else if dead
+        else if (health <= 0) {
+            float stateTime = ModelAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+            if (!dead)
+            {
+                ModelAnimator.SetTrigger("dieTrig");
+                dead = true;
+            }
+            //if in the animtion is in die and is at the end of the animation destory object
+            else if (ModelAnimator.GetCurrentAnimatorStateInfo(0).IsName("die") && ((int)stateTime) == 1) {
+                Destroy(transform.gameObject);
+            }
+        }
     }
 }
