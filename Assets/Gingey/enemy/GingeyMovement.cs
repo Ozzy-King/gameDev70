@@ -4,7 +4,9 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class gingeyMovement : MonoBehaviour
 {
-   
+
+    public GameObject[] gems = new GameObject[5];
+
     private NavMeshAgent agent;
     private Animator ModelAnimator;
     private Camera mainCamera;
@@ -64,6 +66,7 @@ public class gingeyMovement : MonoBehaviour
         attack = true;
     }
 
+    bool stepping = false;
     void Update()
     {
         //stops subsiquence attacks till the current one is done
@@ -92,6 +95,15 @@ public class gingeyMovement : MonoBehaviour
             else
             {
                 ModelAnimator.SetBool("moveingBool", true);
+                if (!stepping)
+                {
+                    playRandomStep();
+                    stepping = true;
+                }
+                else if (!soundSource.isPlaying)
+                {
+                    stepping = false;
+                }
             }
             oldPos = gameObject.transform.position;
 
@@ -114,8 +126,18 @@ public class gingeyMovement : MonoBehaviour
             }
             //if in the animtion is in die and is at the end of the animation destory object
             else if (ModelAnimator.GetCurrentAnimatorStateInfo(0).IsName("die") && ((int)stateTime) == 1) {
+                Instantiate(gems[Random.Range(0, 4)], gameObject.transform.position, Quaternion.identity).transform.rotation = Quaternion.Euler(-89.98f,Random.Range(0f, 360f),0);
                 Destroy(transform.gameObject);
             }
         }
+    }
+    public AudioClip[] snowStep = new AudioClip[3];
+    public AudioSource soundSource;
+    public void playRandomStep()
+    {
+        soundSource.volume = ((-Mathf.Min(Vector3.Distance(gameObject.transform.position, targetPos), 200)) + 200)/200;
+        int randomStep = (int)Random.Range(0, 3);
+        soundSource.clip = snowStep[randomStep];
+        soundSource.Play();
     }
 }
