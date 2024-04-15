@@ -126,7 +126,9 @@ public class gingeyMovement : MonoBehaviour
             }
             //if in the animtion is in die and is at the end of the animation destory object
             else if (ModelAnimator.GetCurrentAnimatorStateInfo(0).IsName("die") && ((int)stateTime) == 1) {
-                Instantiate(gems[Random.Range(0, 4)], gameObject.transform.position, Quaternion.identity).transform.rotation = Quaternion.Euler(-89.98f,Random.Range(0f, 360f),0);
+                GameObject gem = Instantiate(gems[Random.Range(0, 4)], gameObject.transform.position, Quaternion.identity);
+                gem.transform.rotation = Quaternion.Euler(-89.98f, Random.Range(0f, 360f), 0);
+                gem.transform.localScale = new Vector3(150.2f, 150.2f, 150.2f);
                 Destroy(transform.gameObject);
             }
         }

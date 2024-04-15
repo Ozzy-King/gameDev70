@@ -189,6 +189,8 @@ public class playercameraLook : MonoBehaviour
         }
 
         //set hlaeth bar to current health
+        health = Mathf.Min(health, 100);
+        health = Mathf.Max(health, 0);
         GameObject.Find("GameController").GetComponent<gameControllerScript>().userMenu.transform.GetChild(0).GetComponent<Slider>().value = health;
 
 
