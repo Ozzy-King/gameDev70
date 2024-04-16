@@ -153,9 +153,9 @@ public class gameControllerScript : MonoBehaviour
             //if no emenys remain increase wave count by 1 and max enemy by 2, and set to create next wave
             if (enemyList.Count == 0) {
                 spawnedAllEnemy = false;
-                maxEnemyCount += 2;
+                maxEnemyCount += 4;
                 waveCount++;
-                userMenu.transform.GetChild(1).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "Wave: "+waveCount.ToString() ;
+                userMenu.transform.GetChild(1).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "Wave:"+ (waveCount > 9999 ? "9999+" : waveCount.ToString());
             }
 
             //make all the enemys target the player
@@ -180,6 +180,7 @@ public class gameControllerScript : MonoBehaviour
                 }
             }
 
+            userMenu.transform.GetChild(3).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = "Enemy:" + (enemyList.Count > 999 ? "999+" : enemyList.Count.ToString());
         }
     }
 }

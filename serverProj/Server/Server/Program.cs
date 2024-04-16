@@ -176,7 +176,7 @@ class server
     //starts server (create broadcast handler and cleint handlers for when they connect)
     static void Main()
     {
-        IPAddress ipAddress = IPAddress.Parse("192.168.1.133"); //local host ip
+        IPAddress ipAddress = IPAddress.Parse("127.0.0.1"); //local host ip
         int port = 34197;
 
         IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
