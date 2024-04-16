@@ -47,6 +47,10 @@ public class gameControllerScript : MonoBehaviour
         startScreen.SetActive(true);
         gameState = gamestates.menu;
         userMenu.SetActive(false);
+        waveCount = 1;
+        menuEnemyCount = 15;
+        maxEnemyCount = 5;
+        spawnedAllEnemy = false;
     }
     public void pause(bool p)
     {
