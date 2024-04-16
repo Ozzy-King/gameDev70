@@ -1,1 +1,0 @@
-serverip is only on IP 127.0.0.1:34197, it can not be changed as the multiplayer functionality was never completed completely

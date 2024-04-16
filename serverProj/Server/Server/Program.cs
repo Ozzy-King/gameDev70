@@ -176,9 +176,34 @@ class server
     //starts server (create broadcast handler and cleint handlers for when they connect)
     static void Main()
     {
-        IPAddress ipAddress = IPAddress.Parse("127.0.0.1"); //local host ip
-        int port = 34197;
+        //openfile get ip and port
+        string ipPort;
+        if (File.Exists("./config.txt"))//if config exites
+        {
+            ipPort = File.ReadAllText("./config.txt");
+        }
+        else {//else create and set ip and port. write to file
+            ipPort = "127.0.0.1\n34197\0";
+            File.Delete("./config.txt");
+            File.WriteAllLines("./config.txt", new string[] {"127.0.0.1", "34197" });
+        }
 
+        ipPort = ipPort.Trim('\0');//trim ending
+        //else create file with local host and designated port
+        IPAddress ipAddress;
+        int port;
+        try
+        {
+            ipAddress = IPAddress.Parse(ipPort.Split("\r\n")[0]); //local host ip
+            port = int.Parse(ipPort.Split("\r\n")[1]);
+        }
+        catch (Exception e) {
+            ipAddress = IPAddress.Parse("127.0.0.1");
+            port = 34197;
+            File.Delete("./config.txt");
+            File.WriteAllLines("./config.txt", new string[] { "127.0.0.1", "34197" });
+        }
+        Console.WriteLine("IP: " + ipAddress.ToString() + " -- PORT: " + port.ToString());
         IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
 
         // Create a Socket that will use Tcp protocol
